@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistem Optimasi Logistik{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="fas fa-shipping-fast"></i> Sistem Optimasi Logistik
+            </h1>
+            <p class="lead">Optimasi pengiriman barang menggunakan Algoritma Genetika dan Ant Colony Optimization</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stats-card text-center">
+            <i class="fas fa-boxes fa-3x mb-3"></i>
+            <h3 id="totalBarang">0</h3>
+            <p class="mb-0">Total Barang</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+            <i class="fas fa-truck fa-3x mb-3"></i>
+            <h3 id="totalTruk">0</h3>
+            <p class="mb-0">Total Truk</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+            <i class="fas fa-map-marked-alt fa-3x mb-3"></i>
+            <h3 id="totalKota">0</h3>
+            <p class="mb-0">Total Kota</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-route"></i> Panduan Penggunaan
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-primary text-white rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <strong>1</strong>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold">Input Data</h6>
+                                <p class="mb-0 text-muted">Masukkan data barang, truk, dan jarak antar kota</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-success text-white rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <strong>2</strong>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold">Validasi & Simpan</h6>
+                                <p class="mb-0 text-muted">Simpan dan validasi data Anda sebelum optimasi</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-warning text-white rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <strong>3</strong>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold">Optimasi</h6>
+                                <p class="mb-0 text-muted">Jalankan algoritma optimasi untuk solusi terbaik</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-info text-white rounded-circle p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <strong>4</strong>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold">Hasil & Analisis</h6>
+                                <p class="mb-0 text-muted">Lihat solusi optimal dan analisis detail</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <a href="{{ url_for('input_data') }}" class="btn btn-primary btn-lg me-2">
+                        <i class="fas fa-play"></i> Mulai Sekarang
+                    </a>
+                    <button class="btn btn-secondary btn-lg" onclick="loadSampleDataAndGo()">
+                        <i class="fas fa-download"></i> Muat Data Contoh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-brain"></i> Algoritma
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold text-primary">
+                        <i class="fas fa-dna"></i> Genetic Algorithm (GA)
+                    </h6>
+                    <p class="small text-muted">
+                        Mengoptimalkan alokasi barang ke truk menggunakan evolusi buatan dengan crossover dan mutasi.
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="fw-bold text-success">
+                        <i class="fas fa-bug"></i> Ant Colony Optimization (ACO)
+                    </h6>
+                    <p class="small text-muted">
+                        Mencari rute terpendek antar kota menggunakan simulasi perilaku semut.
+                    </p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Hybrid Approach:</strong> Kombinasi kedua algoritma untuk hasil optimal.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar"></i> Status Sistem
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Data Tersimpan:</span>
+                    <span class="badge bg-secondary" id="dataStatus">Mengecek...</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>Optimasi Terakhir:</span>
+                    <span class="badge bg-secondary" id="lastOptimization">Belum Pernah</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Status:</span>
+                    <span class="badge bg-success" id="systemStatus">Siap</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Tentang Sistem
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Fitur Utama:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Optimasi alokasi barang ke truk</li>
+                            <li><i class="fas fa-check text-success"></i> Pencarian rute terpendek dengan Google Maps API</li>
+                            <li><i class="fas fa-check text-success"></i> Kalkulasi biaya dan profit otomatis</li>
+                            <li><i class="fas fa-check text-success"></i> Validasi kapasitas dan data input</li>
+                            <li><i class="fas fa-check text-success"></i> Analisis hasil dengan visualisasi grafis</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Keunggulan:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-star text-warning"></i> Interface yang user-friendly</li>
+                            <li><i class="fas fa-star text-warning"></i> Algoritma hybrid canggih (GA + ACO)</li>
+                            <li><i class="fas fa-star text-warning"></i> Monitoring proses optimasi secara real-time</li>
+                            <li><i class="fas fa-star text-warning"></i> Ekspor hasil dalam format JSON</li>
+                            <li><i class="fas fa-star text-warning"></i> Data disimpan per sesi pengguna</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        loadDashboardStats();
+        checkOptimizationStatus();
+    });
+
+    function loadDashboardStats() {
+        $.get('/api/data_summary')
+            .done(function(response) {
+                if (response.status === 'success') {
+                    const data = response.data;
+                    $('#totalBarang').text(data.barang_count || 0);
+                    $('#totalTruk').text(data.truk_count || 0);
+                    $('#totalKota').text(data.cities.length || 0);
+                    
+                    if (data.has_data) {
+                        $('#dataStatus').removeClass('bg-secondary').addClass('bg-success').text('Tersedia');
+                    } else {
+                        $('#dataStatus').removeClass('bg-success').addClass('bg-secondary').text('Kosong');
+                    }
+                }
+            })
+            .fail(function() {
+                $('#totalBarang, #totalTruk, #totalKota').text('N/A');
+                $('#dataStatus').removeClass('bg-success').addClass('bg-warning').text('Error');
+            });
+    }
+    
+    function checkOptimizationStatus() {
+         $.get('/api/optimization_status').done(function(status) {
+            if (status.completed && status.results) {
+                 $('#lastOptimization').removeClass('bg-secondary').addClass('bg-info').text('Selesai');
+            }
+         });
+    }
+
+    function loadSampleDataAndGo() {
+        if (confirm('Apakah Anda yakin ingin memuat data contoh? Data yang ada di server akan diganti.')) {
+            showLoading('Memuat data contoh...');
+            
+            $.get('/api/sample_data', function(data) {
+                $.ajax({
+                    url: '/api/save_data',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showToast('Data contoh berhasil dimuat!', 'Sukses', 'success');
+                            setTimeout(function() {
+                                window.location.href = "{{ url_for('input_data') }}";
+                            }, 1500);
+                        } else {
+                            showToast('Gagal memuat data contoh: ' + response.message, 'Error', 'error');
+                        }
+                    },
+                    error: function() {
+                        showToast('Terjadi kesalahan saat memuat data contoh', 'Error', 'error');
+                    },
+                    complete: function () {
+                        hideLoading();
+                    }
+                });
+            }).fail(function() {
+                hideLoading();
+                showToast('Gagal mengambil data contoh dari server', 'Error', 'error');
+            });
+        }
+    }
+</script>
+{% endblock %}

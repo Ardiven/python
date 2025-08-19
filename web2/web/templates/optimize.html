@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Optimasi - Sistem Optimasi Logistik{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-4">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="fas fa-cogs"></i> Optimasi Rute & Alokasi
+            </h1>
+            <p class="lead">Jalankan algoritma optimasi untuk mendapatkan solusi terbaik</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card text-center">
+            <i class="fas fa-boxes fa-2x mb-2 text-white"></i>
+            <h4 id="itemCount">-</h4>
+            <p class="mb-0">Total Barang</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+            <i class="fas fa-truck fa-2x mb-2 text-white"></i>
+            <h4 id="truckCount" class="text-white">-</h4>
+            <p class="mb-0 text-white">Total Truk</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+            <i class="fas fa-map-marked-alt fa-2x mb-2 text-white"></i>
+            <h4 id="cityCount" class="text-white">-</h4>
+            <p class="mb-0 text-white">Kota Tujuan</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+            <i class="fas fa-dollar-sign fa-2x mb-2 text-white"></i>
+            <h4 id="potentialProfit" class="text-white">-</h4>
+            <p class="mb-0 text-white">Potensi Profit</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-rocket"></i> Proses Optimasi
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="text-center mb-4" id="optimizationControls">
+                    <button class="btn btn-primary btn-lg px-5 py-3" id="optimizeBtn" onclick="startOptimization()">
+                        <i class="fas fa-rocket me-2"></i> Mulai Optimasi
+                    </button>
+                    <p class="text-muted mt-2">Klik tombol di atas untuk memulai proses optimasi</p>
+                </div>
+
+                <div id="loadingSection" style="display: none;">
+                    <div class="text-center mb-4">
+                        <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="progressBar" role="progressbar" style="width: 0%">
+                            <span id="progressText" class="fw-bold">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <h6 id="statusText">Menginisialisasi optimasi...</h6>
+                        <p class="text-muted" id="timeRemaining">Estimasi waktu: ~30-60 detik</p>
+                    </div>
+                </div>
+
+                <div id="resultSection" style="display: none;">
+                    <div class="alert alert-success text-center">
+                        <h4><i class="fas fa-check-circle"></i> Optimasi Berhasil!</h4>
+                        <p class="mb-0">Solusi terbaik telah ditemukan.</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <h5 class="text-success">Net Profit</h5>
+                                    <h3 id="netProfit" class="text-success">-</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <h5 class="text-info">Fitness Score</h5>
+                                    <h3 id="fitnessScore" class="text-info">-</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6"><div class="d-flex justify-content-between p-3 border rounded"><span><i class="fas fa-boxes text-primary"></i> Barang Dimuat:</span><strong id="itemsLoaded">-</strong></div></div>
+                        <div class="col-md-6"><div class="d-flex justify-content-between p-3 border rounded"><span><i class="fas fa-truck text-danger"></i> Truk Digunakan:</span><strong id="trucksUsed">-</strong></div></div>
+                    </div>
+                    
+                    <div class="text-center mt-4" id="redirectSection">
+                        <p class="text-success"><i class="fas fa-clock"></i> Mengarahkan ke halaman hasil dalam <span id="redirectCountdown" class="fw-bold">5</span> detik...</p>
+                        <div class="btn-group">
+                            <a href="{{ url_for('results_page') }}" class="btn btn-success"><i class="fas fa-chart-bar"></i> Lihat Hasil Detail</a>
+                            <button class="btn btn-secondary" onclick="runNewOptimization()"><i class="fas fa-redo"></i> Optimasi Baru</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="mb-0"><i class="fas fa-sliders-h"></i> Parameter Algoritma</h6></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Ukuran Populasi (GA)</label>
+                    <input type="number" class="form-control" id="populationSize" value="30" min="10" max="100">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Jumlah Generasi (GA)</label>
+                    <input type="number" class="form-control" id="generations" value="30" min="10" max="100">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tingkat Mutasi (GA)</label>
+                    <input type="range" class="form-range" id="mutationRate" min="0.1" max="0.5" step="0.1" value="0.2">
+                    <small class="text-muted">Nilai: <span id="mutationValue" class="fw-bold">0.2</span></small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0"><i class="fas fa-info-circle"></i> Info Algoritma</h6></div>
+            <div class="card-body">
+                <p class="small text-muted">Aplikasi ini menggunakan pendekatan hybrid:</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><strong>Genetic Algorithm:</strong> Untuk mengalokasikan barang ke truk yang paling efisien.</li>
+                    <li><strong>Ant Colony Optimization:</strong> Untuk menemukan rute pengiriman terpendek bagi setiap truk.</li>
+                </ul>
+                <div class="alert alert-info small"><i class="fas fa-lightbulb"></i><strong>Tip:</strong> Nilai parameter yang lebih tinggi bisa menghasilkan solusi lebih baik tetapi butuh waktu lebih lama.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let optimizationInterval, progressInterval, redirectTimer;
+
+    $(document).ready(function() {
+        loadDataSummary();
+        $('#mutationRate').on('input', () => $('#mutationValue').text($('#mutationRate').val()));
+    });
+
+    function loadDataSummary() {
+        $.get('/api/data_summary')
+            .done(function(result) {
+                if (result.status === 'success' && result.data.has_data) {
+                    const data = result.data;
+                    $('#itemCount').text(data.barang_count);
+                    $('#truckCount').text(data.truk_count);
+                    $('#cityCount').text(data.cities.length);
+                    $('#potentialProfit').text(formatCurrency(data.potential_profit));
+                    $('#optimizeBtn').prop('disabled', false);
+                } else {
+                    showToast('Tidak ada data untuk dioptimasi. Silakan ke halaman Input Data dahulu.', 'Peringatan', 'warning');
+                    $('#optimizeBtn').prop('disabled', true).html('<i class="fas fa-exclamation-triangle"></i> Data Kosong');
+                }
+            })
+            .fail(() => showToast('Error memuat ringkasan data.', 'Error', 'error'));
+    }
+
+    function startOptimization() {
+        const params = {
+            population_size: parseInt($('#populationSize').val()),
+            generations: parseInt($('#generations').val()),
+            mutation_rate: parseFloat($('#mutationRate').val())
+        };
+        
+        $('#optimizationControls').hide();
+        $('#loadingSection').show();
+        $('#resultSection').hide();
+        
+        $.post({
+            url: '/api/start_optimization',
+            contentType: 'application/json',
+            data: JSON.stringify(params),
+            success: function(result) {
+                if (result.status === 'success') {
+                    showToast('Optimasi dimulai...', 'Info', 'info');
+                    startProgressTracking();
+                } else {
+                    showToast(result.message, 'Error', 'error');
+                    resetUI();
+                }
+            },
+            error: function() {
+                showToast('Gagal memulai optimasi. Periksa koneksi dan log server.', 'Error', 'error');
+                resetUI();
+            }
+        });
+    }
+
+    function startProgressTracking() {
+        let progress = 0;
+        const statusTexts = ['Inisialisasi populasi', 'Evaluasi fitness', 'Seleksi & Crossover', 'Mutasi gen', 'Optimasi rute ACO', 'Menyusun generasi baru', 'Menyelesaikan solusi'];
+        
+        progressInterval = setInterval(() => {
+            progress = Math.min(progress + 2, 98);
+            $('#progressBar').css('width', progress + '%');
+            $('#progressText').text(Math.round(progress) + '%');
+            const statusIndex = Math.floor((progress / 100) * statusTexts.length);
+            $('#statusText').text(statusTexts[Math.min(statusIndex, statusTexts.length - 1)] + '...');
+        }, 500);
+        
+        optimizationInterval = setInterval(checkOptimizationStatus, 2000);
+    }
+
+    function checkOptimizationStatus() {
+        $.get('/api/optimization_status')
+            .done(function(status) {
+                if (status.completed && status.results) {
+                    clearIntervals();
+                    $('#progressBar').css('width', '100%').addClass('bg-success');
+                    $('#progressText').text('100%');
+                    $('#statusText').text('Optimasi Selesai!');
+                    setTimeout(() => showResults(status.results), 500);
+                } else if (status.error) {
+                    clearIntervals();
+                    showToast('Optimasi gagal: ' + status.error, 'Error', 'error');
+                    resetUI();
+                }
+            });
+    }
+
+    function showResults(results) {
+        $('#loadingSection').hide();
+        $('#resultSection').show();
+        
+        $('#netProfit').text(formatCurrency(results.net_profit));
+        $('#fitnessScore').text(results.fitness.toFixed(2));
+        $('#itemsLoaded').text(`${results.loaded_items}/${results.total_items}`);
+        $('#trucksUsed').text(results.truck_details.length);
+        
+        startRedirectCountdown();
+    }
+
+    function startRedirectCountdown() {
+        let count = 5;
+        $('#redirectCountdown').text(count);
+        redirectTimer = setInterval(() => {
+            count--;
+            $('#redirectCountdown').text(count);
+            if (count <= 0) {
+                clearInterval(redirectTimer);
+                window.location.href = '{{ url_for("results_page") }}';
+            }
+        }, 1000);
+    }
+    
+    function clearIntervals() {
+        if (optimizationInterval) clearInterval(optimizationInterval);
+        if (progressInterval) clearInterval(progressInterval);
+        if (redirectTimer) clearInterval(redirectTimer);
+    }
+
+    function runNewOptimization() {
+        clearIntervals();
+        resetUI();
+    }
+
+    function resetUI() {
+        $('#optimizationControls').show();
+        $('#loadingSection').hide();
+        $('#resultSection').hide();
+        $('#progressBar').css('width', '0%').removeClass('bg-success');
+        $('#progressText').text('0%');
+    }
+
+    $(window).on('beforeunload', clearIntervals);
+</script>
+{% endblock %}

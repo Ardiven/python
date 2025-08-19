@@ -1,0 +1,110 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Logistics Optimizer{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+            <div class="btn-group">
+                <a href="{{ url_for('optimize_page') }}" class="btn btn-success">
+                    <i class="fas fa-play"></i> Mulai Optimasi
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card status-card">
+            <div class="card-body text-center">
+                <i class="fas fa-box fa-3x text-primary mb-3"></i>
+                <h3>{{ barang_count }}</h3>
+                <p class="text-muted">Total Barang</p>
+                <a href="{{ url_for('barang_management') }}" class="btn btn-outline-primary btn-sm">
+                    Kelola Barang
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card status-card">
+            <div class="card-body text-center">
+                <i class="fas fa-truck fa-3x text-success mb-3"></i>
+                <h3>{{ truk_count }}</h3>
+                <p class="text-muted">Total Truk</p>
+                <a href="{{ url_for('truk_management') }}" class="btn btn-outline-success btn-sm">
+                    Kelola Truk
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card status-card">
+            <div class="card-body text-center">
+                <i class="fas fa-network-wired fa-3x text-info mb-3"></i>
+                <h3>20+</h3>
+                <p class="text-muted">Kota Terdaftar</p>
+                <a href="{{ url_for('network_management') }}" class="btn btn-outline-info btn-sm">
+                    Lihat Network
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card {{ 'results-card' if has_results else 'status-card' }}">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x {{ 'text-success' if has_results else 'text-secondary' }} mb-3"></i>
+                <h3>{{ 'Ready' if has_results else 'N/A' }}</h3>
+                <p class="text-muted">Status Hasil</p>
+                {% if has_results %}
+                    <a href="{{ url_for('results_page') }}" class="btn btn-outline-success btn-sm">
+                        Lihat Hasil
+                    </a>
+                {% else %}
+                    <span class="btn btn-outline-secondary btn-sm disabled">
+                        Belum Ada Hasil
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Panduan Penggunaan</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Langkah-langkah:</h6>
+                        <ol>
+                            <li>Tambahkan data barang yang akan dikirim</li>
+                            <li>Tambahkan data truk yang tersedia</li>
+                            <li>Konfigurasikan parameter optimasi</li>
+                            <li>Jalankan proses optimasi</li>
+                            <li>Lihat hasil dan rute optimal</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Fitur Utama:</h6>
+                        <ul>
+                            <li><strong>Genetic Algorithm:</strong> Optimasi alokasi barang ke truk</li>
+                            <li><strong>ACO Routing:</strong> Pencarian rute optimal dengan TSP</li>
+                            <li><strong>Network Routing:</strong> Routing melalui hub cities</li>
+                            <li><strong>Real-time Progress:</strong> Monitor progres optimasi</li>
+                            <li><strong>Visual Results:</strong> Hasil dalam bentuk grafik dan tabel</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

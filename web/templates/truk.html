@@ -1,0 +1,173 @@
+<!-- templates/truk.html -->
+{% extends "base.html" %}
+
+{% block title %}Manajemen Truk - Logistics Optimizer{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-truck"></i> Manajemen Truk</h1>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTrukModal">
+                <i class="fas fa-plus"></i> Tambah Truk
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Daftar Truk</h5>
+            </div>
+            <div class="card-body">
+                {% if truk_list %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Kapasitas Berat (kg)</th>
+                                    <th>Kapasitas Dimensi (m³)</th>
+                                    <th>Konsumsi BBM (L/100km)</th>
+                                    <th>Kota Asal</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for truk in truk_list %}
+                                <tr>
+                                    <td><strong>{{ truk.id }}</strong></td>
+                                    <td>{{ "%.0f"|format(truk.kapasitas_berat) }}</td>
+                                    <td>{{ "%.0f"|format(truk.kapasitas_dimensi) }}</td>
+                                    <td>{{ "%.1f"|format(truk.konsumsi_bbm) }}</td>
+                                    <td>{{ truk.kota_asal }}</td>
+                                    <td><span class="badge bg-success">Tersedia</span></td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteTruk({{ truk.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Belum ada truk yang terdaftar</h5>
+                        <p class="text-muted">Klik tombol "Tambah Truk" untuk menambahkan truk baru</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Truk Modal -->
+<div class="modal fade" id="addTrukModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Truk Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addTrukForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">ID Truk</label>
+                        <input type="number" class="form-control" name="id" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Kapasitas Berat (kg)</label>
+                                <input type="number" class="form-control" name="kapasitas_berat" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Kapasitas Dimensi (m³)</label>
+                                <input type="number" class="form-control" name="kapasitas_dimensi" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Konsumsi BBM (Liter/100km)</label>
+                        <input type="number" class="form-control" name="konsumsi_bbm" step="0.1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kota Asal</label>
+                        <select class="form-select" name="kota_asal" required>
+                            <option value="">Pilih Kota</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success">Tambah Truk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load cities when modal opens
+document.getElementById('addTrukModal').addEventListener('show.bs.modal', function() {
+    loadCities();
+});
+
+async function loadCities() {
+    try {
+        const response = await axios.get('/api/cities');
+        const select = document.querySelector('select[name="kota_asal"]');
+        select.innerHTML = '<option value="">Pilih Kota</option>';
+        response.data.forEach(city => {
+            select.innerHTML += `<option value="${city}">${city}</option>`;
+        });
+    } catch (error) {
+        console.error('Error loading cities:', error);
+    }
+}
+
+// Handle form submission
+document.getElementById('addTrukForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await axios.post('/api/truk', data);
+        if (response.data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + response.data.message);
+        }
+    } catch (error) {
+        alert('Error: ' + error.response?.data?.message || error.message);
+    }
+});
+
+async function deleteTruk(trukId) {
+    if (confirm('Apakah Anda yakin ingin menghapus truk ini?')) {
+        try {
+            const response = await axios.delete(`/api/truk/${trukId}`);
+            if (response.data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + response.data.message);
+            }
+        } catch (error) {
+            alert('Error: ' + error.response?.data?.message || error.message);
+        }
+    }
+}
+</script>
+{% endblock %}

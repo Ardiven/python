@@ -1,0 +1,1006 @@
+{% extends "base.html" %}
+
+{% block title %}Input Data - Sistem Optimasi Logistik{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="fas fa-truck"></i> Input Data Logistik
+            </h1>
+            <p class="lead">Masukkan data barang dan truk. Jarak antar kota akan dihitung secara otomatis oleh sistem.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body p-2">
+                <ul class="nav nav-pills nav-fill" id="dataTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-semibold" id="barang-tab" data-bs-toggle="pill" data-bs-target="#barang" type="button" role="tab">
+                            <i class="fas fa-boxes me-2"></i>Data Barang
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-semibold" id="truk-tab" data-bs-toggle="pill" data-bs-target="#truk" type="button" role="tab">
+                            <i class="fas fa-truck me-2"></i>Data Truk
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-semibold" id="settings-tab" data-bs-toggle="pill" data-bs-target="#settings" type="button" role="tab">
+                            <i class="fas fa-cog me-2"></i>Pengaturan
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab Content -->
+<div class="tab-content" id="dataTabsContent">
+    <!-- Data Barang Tab -->
+    <div class="tab-pane fade show active" id="barang" role="tabpanel">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-boxes me-2 text-primary"></i>Data Barang
+                </h5>
+                <div>
+                    <button class="btn btn-primary me-2" id="add-barang">
+                        <i class="fas fa-plus me-2"></i>Tambah Barang
+                    </button>
+                    <button class="btn btn-secondary" id="sample-barang">
+                        <i class="fas fa-download me-2"></i>Load Sample
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Barang Form -->
+                <div id="barang-form" class="d-none mb-4">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">Tambah/Edit Barang</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">ID Barang</label>
+                                    <input type="text" class="form-control" id="barang-id" placeholder="B001">
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">Berat (kg)</label>
+                                    <input type="number" class="form-control" id="barang-berat" placeholder="100" step="0.1">
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">Dimensi (m³)</label>
+                                    <input type="number" class="form-control" id="barang-dimensi" placeholder="0.5" step="0.01">
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">Kota Tujuan</label>
+                                    <input type="text" class="form-control" id="barang-kota" placeholder="Bandung">
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">Profit per kg (Rp)</label>
+                                    <input type="number" class="form-control" id="barang-profit" placeholder="5000">
+                                </div>
+                                <div class="col-md-6 col-lg-4 d-flex align-items-end">
+                                    <div class="btn-group w-100">
+                                        <button class="btn btn-success" id="save-barang">
+                                            <i class="fas fa-save me-2"></i>Simpan
+                                        </button>
+                                        <button class="btn btn-danger" id="cancel-barang">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barang Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Berat (kg)</th>
+                                <th>Dimensi (m³)</th>
+                                <th>Kota Tujuan</th>
+                                <th>Profit/kg</th>
+                                <th>Total Profit</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="barang-table">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
+                                    Belum ada data barang. Klik "Tambah Barang" atau "Load Sample" untuk memulai.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Truk Tab -->
+    <div class="tab-pane fade" id="truk" role="tabpanel">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-truck me-2 text-success"></i>Data Truk
+                </h5>
+                <div>
+                    <button class="btn btn-primary me-2" id="add-truk">
+                        <i class="fas fa-plus me-2"></i>Tambah Truk
+                    </button>
+                    <button class="btn btn-secondary" id="sample-truk">
+                        <i class="fas fa-download me-2"></i>Load Sample
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Truk Form -->
+                <div id="truk-form" class="d-none mb-4">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">Tambah/Edit Truk</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">ID Truk</label>
+                                    <input type="number" class="form-control" id="truk-id" placeholder="1">
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">Kapasitas Berat (kg)</label>
+                                    <input type="number" class="form-control" id="truk-berat" placeholder="2000">
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">Kapasitas Dimensi (m³)</label>
+                                    <input type="number" class="form-control" id="truk-dimensi" placeholder="9.0" step="0.1">
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">Konsumsi BBM (L/km)</label>
+                                    <input type="number" class="form-control" id="truk-bbm" placeholder="0.15" step="0.01">
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <label class="form-label fw-bold">Kota Asal</label>
+                                    <input type="text" class="form-control" id="truk-asal" placeholder="Jakarta">
+                                </div>
+                                <div class="col-md-6 col-lg-4 d-flex align-items-end">
+                                    <div class="btn-group w-100">
+                                        <button class="btn btn-success" id="save-truk">
+                                            <i class="fas fa-save me-2"></i>Simpan
+                                        </button>
+                                        <button class="btn btn-danger" id="cancel-truk">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Truk Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Kapasitas Berat</th>
+                                <th>Kapasitas Dimensi</th>
+                                <th>Konsumsi BBM</th>
+                                <th>Kota Asal</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="truk-table">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-truck fa-3x mb-3 d-block"></i>
+                                    Belum ada data truk. Klik "Tambah Truk" atau "Load Sample" untuk memulai.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Jarak Tab -->
+    <!-- <div class="tab-pane fade" id="jarak" role="tabpanel">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marked-alt me-2 text-info"></i>Data Jarak
+                </h5>
+                <div>
+                    <button class="btn btn-primary me-2" id="add-jarak">
+                        <i class="fas fa-plus me-2"></i>Tambah Jarak
+                    </button>
+                    <button class="btn btn-secondary" id="sample-jarak">
+                        <i class="fas fa-download me-2"></i>Load Sample
+                    </button>
+                </div>
+            </div>
+            <div class="card-body"> -->
+                <!-- Jarak Form -->
+                <!-- <div id="jarak-form" class="d-none mb-4">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">Tambah/Edit Jarak</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Kota Asal</label>
+                                    <input type="text" class="form-control" id="jarak-asal" placeholder="Jakarta">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Kota Tujuan</label>
+                                    <input type="text" class="form-control" id="jarak-tujuan" placeholder="Bandung">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Jarak (km)</label>
+                                    <input type="number" class="form-control" id="jarak-nilai" placeholder="150">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12 text-end">
+                                    <button class="btn btn-success me-2" id="save-jarak">
+                                        <i class="fas fa-save me-2"></i>Simpan
+                                    </button>
+                                    <button class="btn btn-danger" id="cancel-jarak">
+                                        <i class="fas fa-times me-2"></i>Batal
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+
+                <!-- Jarak Table -->
+                <!-- <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Kota Asal</th>
+                                <th>Kota Tujuan</th>
+                                <th>Jarak (km)</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jarak-table">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="fas fa-map fa-3x mb-3 d-block"></i>
+                                    Belum ada data jarak. Klik "Tambah Jarak" atau "Load Sample" untuk memulai.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Settings Tab -->
+    <div class="tab-pane fade" id="settings" role="tabpanel">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2 text-warning"></i>Pengaturan
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-gas-pump me-2 text-warning"></i>Harga BBM
+                                </h6>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Harga BBM per Liter (Rp)</label>
+                                    <input type="number" class="form-control" id="harga-bbm" value="15000">
+                                </div>
+                                <button class="btn btn-warning" id="save-settings">
+                                    <i class="fas fa-save me-2"></i>Simpan Pengaturan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-info-circle me-2 text-info"></i>Informasi
+                                </h6>
+                                <p class="card-text">
+                                    Harga BBM akan digunakan untuk menghitung biaya operasional truk dalam proses optimasi.
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <strong>Tips:</strong> Pastikan harga BBM sesuai dengan kondisi pasar terkini untuk hasil optimasi yang akurat.
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <button class="btn btn-primary btn-lg" id="save-all-data">
+                        <i class="fas fa-save me-2"></i>Simpan & Hitung Jarak
+                    </button>
+                    <button class="btn btn-outline-danger btn-lg" id="reset-all-data">
+                        <i class="fas fa-trash me-2"></i>Reset Semua Data
+                    </button>
+                    <a href="/optimize" class="btn btn-success btn-lg disabled" id="proceed-optimize">
+                        <i class="fas fa-rocket me-2"></i>Lanjut ke Optimasi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer">
+    <!-- Toast notifications will be dynamically added here -->
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Global data storage
+    let dataBarang = [];
+    let dataTruk = [];
+    let hargaBBM = 15000;
+    let editingIndex = -1;
+
+    // Initialize when document is ready
+    $(document).ready(function() {
+        initializeEventListeners();
+        loadBackupData();
+        loadSampleData();
+    });
+
+    // Initialize all event listeners
+    function initializeEventListeners() {
+        // Barang events
+        $('#add-barang').click(() => showForm('barang'));
+        $('#sample-barang').click(() => loadSampleDataType('barang'));
+        $('#save-barang').click(() => saveData('barang'));
+        $('#cancel-barang').click(() => hideForm('barang'));
+
+        // Truk events
+        $('#add-truk').click(() => showForm('truk'));
+        $('#sample-truk').click(() => loadSampleDataType('truk'));
+        $('#save-truk').click(() => saveData('truk'));
+        $('#cancel-truk').click(() => hideForm('truk'));
+
+        // Jarak events
+        $('#add-jarak').click(() => showForm('jarak'));
+        $('#sample-jarak').click(() => loadSampleDataType('jarak'));
+        $('#save-jarak').click(() => saveData('jarak'));
+        $('#cancel-jarak').click(() => hideForm('jarak'));
+
+        // Settings events
+        $('#save-settings').click(saveSettings);
+
+        // Action buttons
+        $('#validate-data').click(validateAllData);
+        $('#save-all-data').click(saveAllData);
+        $('#reset-all-data').click(resetAllData);
+    }
+
+    // Show notification toast
+    function showToast(message, type = 'success') {
+        const toastId = 'toast-' + Date.now();
+        const iconClass = type === 'success' ? 'fa-check-circle' :
+                         type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+        const bgClass = type === 'success' ? 'bg-success' :
+                       type === 'error' ? 'bg-danger' : 'bg-info';
+
+        const toastHtml = `
+            <div class="toast" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header ${bgClass} text-white">
+                    <i class="fas ${iconClass} me-2"></i>
+                    <strong class="me-auto">Sistem</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+
+        $('#toastContainer').append(toastHtml);
+        const toast = new bootstrap.Toast(document.getElementById(toastId));
+        toast.show();
+
+        // Remove toast element after it's hidden
+        document.getElementById(toastId).addEventListener('hidden.bs.toast', function() {
+            this.remove();
+        });
+    }
+
+    // Load sample data
+    async function loadSampleData() {
+        try {
+            const response = await fetch('/api/sample_data');
+            const sampleData = await response.json();
+            window.sampleData = sampleData;
+        } catch (error) {
+            console.error('Error loading sample data:', error);
+        }
+    }
+
+    // Load specific sample data type
+    function loadSampleDataType(type) {
+        if (window.sampleData && window.sampleData[type]) {
+            if (type === 'barang') {
+                dataBarang = window.sampleData.barang;
+                updateTable('barang');
+            } else if (type === 'truk') {
+                dataTruk = window.sampleData.truk;
+                updateTable('truk');
+            } else if (type === 'jarak') {
+                dataJarak = window.sampleData.jarak;
+                updateTable('jarak');
+            }
+            showToast(`Sample data ${type} berhasil dimuat!`);
+            triggerAutoSave();
+        }
+    }
+
+    // Show form
+    function showForm(type) {
+        editingIndex = -1;
+        clearForm(type);
+        $(`#${type}-form`).removeClass('d-none');
+    }
+
+    // Hide form
+    function hideForm(type) {
+        $(`#${type}-form`).addClass('d-none');
+        clearForm(type);
+    }
+
+    // Clear form
+    function clearForm(type) {
+        if (type === 'barang') {
+            $('#barang-id, #barang-berat, #barang-dimensi, #barang-kota, #barang-profit').val('');
+        } else if (type === 'truk') {
+            $('#truk-id, #truk-berat, #truk-dimensi, #truk-bbm, #truk-asal').val('');
+        } else if (type === 'jarak') {
+            $('#jarak-asal, #jarak-tujuan, #jarak-nilai').val('');
+        }
+        editingIndex = -1;
+    }
+
+    // Save data
+    function saveData(type) {
+        let data = {};
+        let isValid = true;
+
+        if (type === 'barang') {
+            data = {
+                id: $('#barang-id').val(),
+                berat: parseFloat($('#barang-berat').val()),
+                dimensi: parseFloat($('#barang-dimensi').val()),
+                kota_tujuan: $('#barang-kota').val(),
+                profit_per_kg: parseFloat($('#barang-profit').val())
+            };
+
+            // Validation
+            if (!data.id || !data.berat || !data.dimensi || !data.kota_tujuan || !data.profit_per_kg) {
+                showToast('Semua field harus diisi!', 'error');
+                return;
+            }
+
+            // Check duplicate ID
+            if (editingIndex === -1 && dataBarang.some(item => item.id === data.id)) {
+                showToast('ID barang sudah ada!', 'error');
+                return;
+            }
+
+            if (editingIndex >= 0) {
+                dataBarang[editingIndex] = data;
+                showToast('Barang berhasil diupdate!');
+            } else {
+                dataBarang.push(data);
+                showToast('Barang berhasil ditambahkan!');
+            }
+
+        } else if (type === 'truk') {
+            data = {
+                id: parseInt($('#truk-id').val()),
+                kapasitas_berat: parseFloat($('#truk-berat').val()),
+                kapasitas_dimensi: parseFloat($('#truk-dimensi').val()),
+                konsumsi_bbm: parseFloat($('#truk-bbm').val()),
+                kota_asal: $('#truk-asal').val() || 'Jakarta'
+            };
+
+            // Validation
+            if (!data.id || !data.kapasitas_berat || !data.kapasitas_dimensi || !data.konsumsi_bbm) {
+                showToast('Semua field harus diisi!', 'error');
+                return;
+            }
+
+            // Check duplicate ID
+            if (editingIndex === -1 && dataTruk.some(item => item.id === data.id)) {
+                showToast('ID truk sudah ada!', 'error');
+                return;
+            }
+
+            if (editingIndex >= 0) {
+                dataTruk[editingIndex] = data;
+                showToast('Truk berhasil diupdate!');
+            } else {
+                dataTruk.push(data);
+                showToast('Truk berhasil ditambahkan!');
+            }
+
+        } else if (type === 'jarak') {
+            data = {
+                kota_asal: $('#jarak-asal').val(),
+                kota_tujuan: $('#jarak-tujuan').val(),
+                jarak: parseFloat($('#jarak-nilai').val())
+            };
+
+            // Validation
+            if (!data.kota_asal || !data.kota_tujuan || !data.jarak) {
+                showToast('Semua field harus diisi!', 'error');
+                return;
+            }
+
+            // Check duplicate route
+            const existingRoute = dataJarak.findIndex(item =>
+                item.kota_asal === data.kota_asal && item.kota_tujuan === data.kota_tujuan
+            );
+
+            if (editingIndex === -1 && existingRoute !== -1) {
+                showToast('Rute sudah ada!', 'error');
+                return;
+            }
+
+            if (editingIndex >= 0) {
+                dataJarak[editingIndex] = data;
+                showToast('Jarak berhasil diupdate!');
+            } else {
+                dataJarak.push(data);
+                showToast('Jarak berhasil ditambahkan!');
+            }
+        }
+
+        updateTable(type);
+        hideForm(type);
+        triggerAutoSave();
+    }
+
+    // Update table
+    function updateTable(type) {
+        const tbody = $(`#${type}-table`);
+        tbody.empty();
+
+        let data = type === 'barang' ? dataBarang : type === 'truk' ? dataTruk : dataJarak;
+
+        if (data.length === 0) {
+            let emptyMessage = '';
+            let icon = '';
+            if (type === 'barang') {
+                icon = 'fa-box-open';
+                emptyMessage = 'Belum ada data barang. Klik "Tambah Barang" atau "Load Sample" untuk memulai.';
+            } else if (type === 'truk') {
+                icon = 'fa-truck';
+                emptyMessage = 'Belum ada data truk. Klik "Tambah Truk" atau "Load Sample" untuk memulai.';
+            } else {
+                icon = 'fa-map';
+                emptyMessage = 'Belum ada data jarak. Klik "Tambah Jarak" atau "Load Sample" untuk memulai.';
+            }
+
+            const colSpan = type === 'barang' ? 7 : type === 'truk' ? 6 : 4;
+            tbody.append(`
+                <tr>
+                    <td colspan="${colSpan}" class="text-center text-muted py-4">
+                        <i class="fas ${icon} fa-3x mb-3 d-block"></i>
+                        ${emptyMessage}
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        data.forEach((item, index) => {
+            let row = '';
+            if (type === 'barang') {
+                const totalProfit = item.berat * item.profit_per_kg;
+                row = `
+                    <tr>
+                        <td><strong>${item.id}</strong></td>
+                        <td>${item.berat}</td>
+                        <td>${item.dimensi}</td>
+                        <td>${item.kota_tujuan}</td>
+                        <td>Rp ${item.profit_per_kg.toLocaleString()}</td>
+                        <td>Rp ${totalProfit.toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editData('${type}', ${index})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteData('${type}', ${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            } else if (type === 'truk') {
+                row = `
+                    <tr>
+                        <td><strong>${item.id}</strong></td>
+                        <td>${item.kapasitas_berat} kg</td>
+                        <td>${item.kapasitas_dimensi} m³</td>
+                        <td>${item.konsumsi_bbm} L/km</td>
+                        <td>${item.kota_asal}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editData('${type}', ${index})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteData('${type}', ${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            } else if (type === 'jarak') {
+                row = `
+                    <tr>
+                        <td>${item.kota_asal}</td>
+                        <td>${item.kota_tujuan}</td>
+                        <td>${item.jarak} km</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editData('${type}', ${index})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteData('${type}', ${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+            tbody.append(row);
+        });
+    }
+
+    // Edit data
+    function editData(type, index) {
+        editingIndex = index;
+        let data = type === 'barang' ? dataBarang[index] :
+                  type === 'truk' ? dataTruk[index] :
+                  dataJarak[index];
+
+        if (type === 'barang') {
+            $('#barang-id').val(data.id);
+            $('#barang-berat').val(data.berat);
+            $('#barang-dimensi').val(data.dimensi);
+            $('#barang-kota').val(data.kota_tujuan);
+            $('#barang-profit').val(data.profit_per_kg);
+        } else if (type === 'truk') {
+            $('#truk-id').val(data.id);
+            $('#truk-berat').val(data.kapasitas_berat);
+            $('#truk-dimensi').val(data.kapasitas_dimensi);
+            $('#truk-bbm').val(data.konsumsi_bbm);
+            $('#truk-asal').val(data.kota_asal);
+        } else if (type === 'jarak') {
+            $('#jarak-asal').val(data.kota_asal);
+            $('#jarak-tujuan').val(data.kota_tujuan);
+            $('#jarak-nilai').val(data.jarak);
+        }
+
+        showForm(type);
+    }
+
+    // Delete data
+    function deleteData(type, index) {
+        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+            if (type === 'barang') {
+                dataBarang.splice(index, 1);
+            } else if (type === 'truk') {
+                dataTruk.splice(index, 1);
+            } else if (type === 'jarak') {
+                dataJarak.splice(index, 1);
+            }
+
+            updateTable(type);
+            showToast(`Data ${type} berhasil dihapus!`);
+            triggerAutoSave();
+        }
+    }
+
+    // Save settings
+    function saveSettings() {
+        hargaBBM = parseFloat($('#harga-bbm').val()) || 15000;
+        showToast('Pengaturan berhasil disimpan!');
+        triggerAutoSave();
+    }
+
+    // Validate all data
+    function validateAllData() {
+        let errors = [];
+
+        // Validate barang data
+        if (dataBarang.length === 0) {
+            errors.push('Data barang belum ada');
+        } else {
+            // Check for duplicate barang IDs
+            const barangIds = dataBarang.map(item => item.id);
+            const duplicateBarangIds = barangIds.filter((id, index) => barangIds.indexOf(id) !== index);
+            if (duplicateBarangIds.length > 0) {
+                errors.push(`ID barang duplikat: ${duplicateBarangIds.join(', ')}`);
+            }
+
+            // Check for invalid barang data
+            dataBarang.forEach((item, index) => {
+                if (!item.id || item.berat <= 0 || item.dimensi <= 0 || !item.kota_tujuan || item.profit_per_kg <= 0) {
+                    errors.push(`Data barang ${index + 1} tidak valid`);
+                }
+            });
+        }
+
+        // Validate truk data
+        if (dataTruk.length === 0) {
+            errors.push('Data truk belum ada');
+        } else {
+            // Check for duplicate truk IDs
+            const trukIds = dataTruk.map(item => item.id);
+            const duplicateTrukIds = trukIds.filter((id, index) => trukIds.indexOf(id) !== index);
+            if (duplicateTrukIds.length > 0) {
+                errors.push(`ID truk duplikat: ${duplicateTrukIds.join(', ')}`);
+            }
+
+            // Check for invalid truk data
+            dataTruk.forEach((item, index) => {
+                if (!item.id || item.kapasitas_berat <= 0 || item.kapasitas_dimensi <= 0 || item.konsumsi_bbm <= 0) {
+                    errors.push(`Data truk ${index + 1} tidak valid`);
+                }
+            });
+        }
+
+        // Validate jarak data
+        if (dataJarak.length === 0) {
+            errors.push('Data jarak belum ada');
+        } else {
+            // Check for duplicate routes
+            const routes = dataJarak.map(item => `${item.kota_asal}-${item.kota_tujuan}`);
+            const duplicateRoutes = routes.filter((route, index) => routes.indexOf(route) !== index);
+            if (duplicateRoutes.length > 0) {
+                errors.push(`Rute duplikat: ${duplicateRoutes.join(', ')}`);
+            }
+
+            // Check for invalid jarak data
+            dataJarak.forEach((item, index) => {
+                if (!item.kota_asal || !item.kota_tujuan || item.jarak <= 0) {
+                    errors.push(`Data jarak ${index + 1} tidak valid`);
+                }
+            });
+        }
+
+        // Check route completeness
+        if (dataBarang.length > 0 && dataJarak.length > 0 && dataTruk.length > 0) {
+            const kotaTujuan = [...new Set(dataBarang.map(item => item.kota_tujuan))];
+            const kotaAsal = [...new Set(dataTruk.map(item => item.kota_asal))];
+            const availableRoutes = dataJarak.map(item => `${item.kota_asal}-${item.kota_tujuan}`);
+
+            kotaAsal.forEach(asal => {
+                kotaTujuan.forEach(tujuan => {
+                    if (!availableRoutes.includes(`${asal}-${tujuan}`)) {
+                        errors.push(`Rute ${asal} ke ${tujuan} belum ada`);
+                    }
+                });
+            });
+        }
+
+        // Validate BBM price
+        if (hargaBBM <= 0) {
+            errors.push('Harga BBM harus lebih dari 0');
+        }
+
+        // Show validation results
+        if (errors.length === 0) {
+            showToast('Semua data valid! Siap untuk optimasi.', 'success');
+            $('#proceed-optimize').removeClass('disabled');
+        } else {
+            showToast(`Ditemukan ${errors.length} error:\n${errors.join('\n')}`, 'error');
+            $('#proceed-optimize').addClass('disabled');
+        }
+
+        return errors.length === 0;
+    }
+
+    // Save all data
+    async function saveAllData() {
+        // Objek data tidak lagi menyertakan 'jarak'
+        const allData = {
+            barang: dataBarang,
+            truk: dataTruk,
+            harga_bbm: hargaBBM
+        };
+
+        // Tampilkan loading indicator pada tombol
+        $('#save-all-data').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan & Menghitung Jarak...');
+
+        try {
+            const response = await fetch('/api/save_data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(allData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                showToast(result.message || 'Data berhasil disimpan dan jarak dihitung!');
+                localStorage.setItem('logistik_data_backup', JSON.stringify(allData));
+                $('#proceed-optimize').removeClass('disabled'); // Aktifkan tombol optimasi
+            } else {
+                showToast(result.message || 'Gagal menyimpan data ke server', 'error');
+                $('#proceed-optimize').addClass('disabled');
+            }
+        } catch (error) {
+            console.error('Error saving data:', error);
+            showToast('Error: Tidak dapat terhubung ke server.', 'error');
+        } finally {
+            // Kembalikan tombol ke keadaan normal
+            $('#save-all-data').prop('disabled', false).html('<i class="fas fa-save me-2"></i>Simpan & Hitung Jarak');
+        }
+    }
+
+    // Reset all data
+    function resetAllData() {
+        if (confirm('Apakah Anda yakin ingin menghapus semua data? Tindakan ini tidak dapat dibatalkan.')) {
+            dataBarang = [];
+            dataTruk = [];
+            dataJarak = [];
+            hargaBBM = 15000;
+            $('#harga-bbm').val(hargaBBM);
+
+            updateTable('barang');
+            updateTable('truk');
+            updateTable('jarak');
+
+            hideForm('barang');
+            hideForm('truk');
+            hideForm('jarak');
+
+            localStorage.removeItem('logistik_data');
+            $('#proceed-optimize').addClass('disabled');
+
+            showToast('Semua data berhasil direset!');
+        }
+    }
+
+    // Auto-save trigger
+    function triggerAutoSave() {
+        const allData = {
+            barang: dataBarang,
+            truk: dataTruk,
+            jarak: dataJarak,
+            harga_bbm: hargaBBM
+        };
+        localStorage.setItem('logistik_data_backup', JSON.stringify(allData));
+    }
+
+    // Load backup data
+    function loadBackupData() {
+        try {
+            const backupData = localStorage.getItem('logistik_data_backup');
+            if (backupData) {
+                const data = JSON.parse(backupData);
+                dataBarang = data.barang || [];
+                dataTruk = data.truk || [];
+                dataJarak = data.jarak || [];
+                hargaBBM = data.harga_bbm || 15000;
+                $('#harga-bbm').val(hargaBBM);
+
+                updateTable('barang');
+                updateTable('truk');
+                updateTable('jarak');
+
+                if (dataBarang.length > 0 || dataTruk.length > 0 || dataJarak.length > 0) {
+                    showToast('Data backup berhasil dimuat!', 'info');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading backup data:', error);
+        }
+    }
+
+    // Export data to JSON
+    function exportData() {
+        const allData = {
+            barang: dataBarang,
+            truk: dataTruk,
+            jarak: dataJarak,
+            harga_bbm: hargaBBM,
+            exported_at: new Date().toISOString()
+        };
+
+        const dataStr = JSON.stringify(allData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+        const exportFileDefaultName = `logistik_data_${new Date().toISOString().split('T')[0]}.json`;
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+
+        showToast('Data berhasil diekspor!');
+    }
+
+    // Import data from JSON
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+
+                if (importedData.barang && importedData.truk && importedData.jarak) {
+                    dataBarang = importedData.barang;
+                    dataTruk = importedData.truk;
+                    dataJarak = importedData.jarak;
+                    hargaBBM = importedData.harga_bbm || 15000;
+                    $('#harga-bbm').val(hargaBBM);
+
+                    updateTable('barang');
+                    updateTable('truk');
+                    updateTable('jarak');
+
+                    triggerAutoSave();
+                    showToast('Data berhasil diimpor!');
+                } else {
+                    showToast('Format file tidak valid!', 'error');
+                }
+            } catch (error) {
+                showToast('Error membaca file!', 'error');
+                console.error('Import error:', error);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // Make functions globally available
+    window.editData = editData;
+    window.deleteData = deleteData;
+    window.exportData = exportData;
+    window.importData = importData;
+</script>
+{% endblock %}
+
+

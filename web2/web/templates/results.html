@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Hasil Optimasi - Sistem Optimasi Logistik{% endblock %}
+
+{% block styles %}
+<style>
+    @media print {
+        body, .main-content {
+            background: white !important;
+            box-shadow: none;
+            margin: 0;
+            padding: 0;
+        }
+        .sidebar, .navbar, .action-buttons {
+            display: none !important;
+        }
+        .card {
+            box-shadow: none;
+            border: 1px solid #dee2e6 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="mb-0"><i class="fas fa-chart-line me-2"></i>Laporan Hasil Optimasi</h4>
+                        {% if results.timestamp %}
+                        <p class="mb-0 small text-white-50" id="timestamp">
+                           Dibuat pada: {{ results.timestamp.split('T')[0] }} {{ results.timestamp.split('T')[1].split('.')[0] }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge fs-6 {{ 'bg-success' if results.is_valid else 'bg-warning' }}">
+                            <i class="fas {{ 'fa-check-circle' if results.is_valid else 'fa-exclamation-triangle' }} me-1"></i>
+                            {{ 'Solusi Valid' if results.is_valid else 'Ada Pelanggaran' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4 action-buttons">
+    <div class="col-12 text-center">
+        <div class="btn-group">
+            <a href="{{ url_for('optimize_page') }}" class="btn btn-primary"><i class="fas fa-redo me-2"></i>Optimasi Baru</a>
+            <button class="btn btn-success" onclick="exportResults()"><i class="fas fa-download me-2"></i>Export JSON</button>
+            <button class="btn btn-info" onclick="window.print()"><i class="fas fa-print me-2"></i>Cetak Laporan</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary"><i class="fas fa-home me-2"></i>Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+            <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+            <h4>{{ "Rp {:,.0f}".format(results.total_profit or 0) }}</h4>
+            <p class="mb-0">Total Profit Kotor</p>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #e74c3c, #f1c40f);">
+            <i class="fas fa-gas-pump fa-2x mb-2"></i>
+            <h4>{{ "Rp {:,.0f}".format(results.total_cost or 0) }}</h4>
+            <p class="mb-0">Total Biaya Operasional</p>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12 mb-4">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #3498db, #8e44ad);">
+            <i class="fas fa-chart-pie fa-2x mb-2"></i>
+            <h4>{{ "Rp {:,.0f}".format(results.net_profit or 0) }}</h4>
+            <p class="mb-0">Profit Bersih (Net Profit)</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 col-6 mb-2"><div class="card text-center p-2 h-100"><small class="text-muted">Skor Fitness</small> <strong>{{ "%.2f"|format(results.fitness or 0) }}</strong></div></div>
+    <div class="col-md-3 col-6 mb-2"><div class="card text-center p-2 h-100"><small class="text-muted">Barang Dimuat</small> <strong>{{ results.loaded_items or 0 }}/{{ results.total_items or 0 }}</strong></div></div>
+    <div class="col-md-3 col-6 mb-2"><div class="card text-center p-2 h-100"><small class="text-muted">Efisiensi Muat</small> <strong>{{ "%.1f"|format(((results.loaded_items or 0) / (results.total_items or 1) * 100)) }}%</strong></div></div>
+    <div class="col-md-3 col-6 mb-2"><div class="card text-center p-2 h-100"><small class="text-muted">Truk Digunakan</small> <strong>{{ results.truck_details|length if results.truck_details else 0 }}</strong></div></div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0"><i class="fas fa-truck-loading me-2"></i>Detail Penugasan Truk</h5></div>
+            <div class="card-body">
+                {% if results.truck_details and results.truck_details|length > 0 %}
+                    {% for truck in results.truck_details %}
+                    <div class="card mb-3 border">
+                        <div class="card-header bg-light text-dark d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-truck me-2"></i>Truk ID: {{ truck.truk_id }} (Asal: {{ truck.kota_asal }})</h6>
+                            <span class="badge bg-primary">Profit: {{ "Rp {:,.0f}".format(truck.profit) }}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <small>Kapasitas Berat</small>
+                                    {% set weight_percent = (truck.total_weight / truck.capacity_weight * 100)|round(1) %}
+                                    <div class="progress" style="height: 20px;"><div class="progress-bar fw-bold {{ 'bg-danger' if weight_percent > 100 else 'bg-success' }}" style="width: {{ [weight_percent, 100]|min }}%">{{ weight_percent }}%</div></div>
+                                    <small class="text-muted">{{ "%.1f"|format(truck.total_weight) }} / {{ truck.capacity_weight }} kg</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small>Kapasitas Volume</small>
+                                    {% set volume_percent = (truck.total_volume / truck.capacity_volume * 100)|round(1) %}
+                                    <div class="progress" style="height: 20px;"><div class="progress-bar fw-bold {{ 'bg-danger' if volume_percent > 100 else 'bg-info' }}" style="width: {{ [volume_percent, 100]|min }}%">{{ volume_percent }}%</div></div>
+                                    <small class="text-muted">{{ "%.2f"|format(truck.total_volume) }} / {{ truck.capacity_volume }} m³</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <small class="fw-bold">Rute Pengiriman (LIFO Loading Order):</small><br>
+                                {% if truck.route and truck.route|length > 0 %}
+                                    <strong>{{ truck.kota_asal }}</strong> <i class="fas fa-arrow-right text-muted mx-1"></i>
+                                    {% for city in truck.route %}
+                                        <span class="badge bg-secondary">{{ city }}</span>
+                                        {% if not loop.last %}<i class="fas fa-arrow-right text-muted mx-1"></i>{% endif %}
+                                    {% endfor %}
+                                     <i class="fas fa-arrow-right text-muted mx-1"></i> <strong>{{ truck.kota_asal }}</strong>
+                                {% else %}<span class="text-muted">Tidak ada rute</span>{% endif %}
+                            </div>
+
+                            <details>
+                                <summary class="fw-bold" style="cursor: pointer;">Tabel Barang Dimuat ({{ truck.items_count }} item)</summary>
+                                <div class="table-responsive mt-2">
+                                    <table class="table table-bordered table-sm">
+                                        <thead class="table-dark"><tr><th>Urutan Muat</th><th>ID</th><th>Berat</th><th>Volume</th><th>Tujuan</th><th>Profit</th></tr></thead>
+                                        <tbody>
+                                            {% for item in truck.items %}
+                                            <tr><td>{{ loop.index }}</td><td>{{ item.id }}</td><td>{{ item.berat }} kg</td><td>{{ item.dimensi }} m³</td><td>{{ item.kota_tujuan }}</td><td>{{ "Rp {:,.0f}".format(item.profit) }}</td></tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Tidak ada truk yang ditugaskan.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results.unloaded_items and results.unloaded_items|length > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark"><h5 class="mb-0"><i class="fas fa-box-open me-2"></i>Barang Tidak Dimuat</h5></div>
+            <div class="card-body">
+                <p>Total <strong>{{ results.unloaded_items|length }} barang</strong> tidak dapat dimuat, mengakibatkan potensi profit hilang sebesar <strong class="text-danger">{{ "Rp {:,.0f}".format(results.unloaded_profit or 0) }}</strong>.</p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead class="table-dark"><tr><th>ID</th><th>Berat (kg)</th><th>Volume (m³)</th><th>Tujuan</th><th>Profit Hilang</th></tr></thead>
+                        <tbody>
+                            {% for item in results.unloaded_items %}
+                            <tr><td>{{ item.id }}</td><td>{{ item.berat }}</td><td>{{ item.dimensi }}</td><td>{{ item.kota_tujuan }}</td><td class="text-danger">{{ "Rp {:,.0f}".format(item.profit) }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Visualisasi Performa</h5></div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><div class="card h-100"><div class="card-body"><h6>Utilisasi Kapasitas per Truk</h6><canvas id="capacityChart"></canvas></div></div></div>
+                    <div class="col-md-6 mb-3"><div class="card h-100"><div class="card-body"><h6>Distribusi Profit per Truk</h6><canvas id="profitChart"></canvas></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const resultsData = {{ results|tojson }};
+    
+    $(document).ready(function() {
+        if(resultsData && resultsData.truck_details && resultsData.truck_details.length > 0) {
+            createCapacityChart();
+            createProfitChart();
+        }
+    });
+
+    function createCapacityChart() {
+        const truckData = resultsData.truck_details || [];
+        new Chart(document.getElementById('capacityChart'), {
+            type: 'bar',
+            data: {
+                labels: truckData.map(t => `Truk ${t.truk_id}`),
+                datasets: [
+                    { label: 'Utilisasi Berat (%)', data: truckData.map(t => (t.total_weight / t.capacity_weight * 100)), backgroundColor: 'rgba(54, 162, 235, 0.8)' },
+                    { label: 'Utilisasi Volume (%)', data: truckData.map(t => (t.total_volume / t.capacity_volume * 100)), backgroundColor: 'rgba(255, 99, 132, 0.8)' }
+                ]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true, max: 110 } } }
+        });
+    }
+
+    function createProfitChart() {
+        const truckData = resultsData.truck_details || [];
+        new Chart(document.getElementById('profitChart'), {
+            type: 'doughnut',
+            data: {
+                labels: truckData.map(t => `Truk ${t.truk_id}`),
+                datasets: [{
+                    data: truckData.map(t => t.profit),
+                    backgroundColor: ['#2ecc71', '#3498db', '#f1c40f', '#e74c3c', '#9b59b6', '#34495e']
+                }]
+            },
+            options: { responsive: true, plugins: { tooltip: { callbacks: { label: c => `${c.label}: ${formatCurrency(c.parsed)}` } } } }
+        });
+    }
+
+    function exportResults() {
+        showLoading('Mengekspor hasil...');
+        $.get('/api/export_results')
+            .done(function(data) {
+                if (data.status === 'success') {
+                    const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = data.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    showToast('Hasil berhasil diekspor!', 'Sukses', 'success');
+                } else {
+                    showToast('Ekspor gagal: ' + data.message, 'Error', 'error');
+                }
+            })
+            .fail(() => showToast('Terjadi kesalahan saat mengekspor.', 'Error', 'error'))
+            .always(() => hideLoading());
+    }
+</script>
+{% endblock %}

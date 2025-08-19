@@ -1,0 +1,195 @@
+<!-- templates/barang.html -->
+{% extends "base.html" %}
+
+{% block title %}Manajemen Barang - Logistics Optimizer{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-box"></i> Manajemen Barang</h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBarangModal">
+                <i class="fas fa-plus"></i> Tambah Barang
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Daftar Barang</h5>
+            </div>
+            <div class="card-body">
+                {% if barang_list %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Berat (kg)</th>
+                                    <th>Dimensi (m³)</th>
+                                    <th>Kota Tujuan</th>
+                                    <th>Harga Dasar</th>
+                                    <th>Urgency</th>
+                                    <th>Profit Estimasi</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for barang in barang_list %}
+                                <tr>
+                                    <td><strong>{{ barang.id }}</strong></td>
+                                    <td>{{ "%.1f"|format(barang.berat) }}</td>
+                                    <td>{{ "%.1f"|format(barang.dimensi) }}</td>
+                                    <td>{{ barang.kota_tujuan }}</td>
+                                    <td>Rp {{ "{:,.0f}".format(barang.base_price) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if barang.urgency >= 3 else 'warning' if barang.urgency == 2 else 'success' }}">
+                                            {{ barang.urgency }}
+                                        </span>
+                                    </td>
+                                    <td>Rp {{ "{:,.0f}".format(barang.base_total_profit) }}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteBarang('{{ barang.id }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Belum ada barang yang terdaftar</h5>
+                        <p class="text-muted">Klik tombol "Tambah Barang" untuk menambahkan barang baru</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Barang Modal -->
+<div class="modal fade" id="addBarangModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Barang Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addBarangForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">ID Barang</label>
+                        <input type="text" class="form-control" name="id" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Berat (kg)</label>
+                                <input type="number" class="form-control" name="berat" step="0.1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Dimensi (m³)</label>
+                                <input type="number" class="form-control" name="dimensi" step="0.1" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kota Tujuan</label>
+                        <select class="form-select" name="kota_tujuan" required>
+                            <option value="">Pilih Kota</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Harga Dasar (Rp)</label>
+                                <input type="number" class="form-control" name="base_price" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Urgency (1-5)</label>
+                                <select class="form-select" name="urgency" required>
+                                    <option value="1">1 - Normal</option>
+                                    <option value="2">2 - Sedang</option>
+                                    <option value="3">3 - Tinggi</option>
+                                    <option value="4">4 - Sangat Tinggi</option>
+                                    <option value="5">5 - Darurat</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Tambah Barang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load cities when modal opens
+document.getElementById('addBarangModal').addEventListener('show.bs.modal', function() {
+    loadCities();
+});
+
+async function loadCities() {
+    try {
+        const response = await axios.get('/api/cities');
+        const select = document.querySelector('select[name="kota_tujuan"]');
+        select.innerHTML = '<option value="">Pilih Kota</option>';
+        response.data.forEach(city => {
+            select.innerHTML += `<option value="${city}">${city}</option>`;
+        });
+    } catch (error) {
+        console.error('Error loading cities:', error);
+    }
+}
+
+// Handle form submission
+document.getElementById('addBarangForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await axios.post('/api/barang', data);
+        if (response.data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + response.data.message);
+        }
+    } catch (error) {
+        alert('Error: ' + error.response?.data?.message || error.message);
+    }
+});
+
+async function deleteBarang(barangId) {
+    if (confirm('Apakah Anda yakin ingin menghapus barang ini?')) {
+        try {
+            const response = await axios.delete(`/api/barang/${barangId}`);
+            if (response.data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + response.data.message);
+            }
+        } catch (error) {
+            alert('Error: ' + error.response?.data?.message || error.message);
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}Hasil Optimasi - Sistem Optimasi Logistik{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2 class="mb-0"><i class="fas fa-chart-line me-3"></i>Hasil Optimasi</h2>
+                        <p class="mb-0" id="timestamp">
+                            {% if results.timestamp %}
+                                {% if results.timestamp is string %}
+                                    Dibuat: {{ results.timestamp }}
+                                {% else %}
+                                    Dibuat: {{ results.timestamp.strftime('%d %B %Y, %H:%M:%S') }}
+                                {% endif %}
+                            {% else %}
+                                Dibuat: {{ moment().format('DD MMMM YYYY, HH:mm:ss') if moment is defined else 'Tidak tersedia' }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        {% if results.is_valid %}
+                            <span class="badge bg-success fs-6">
+                                <i class="fas fa-check-circle me-1"></i>Solusi Valid
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning fs-6">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Ada Pelanggaran
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('optimize_page') }}" class="btn btn-primary me-2">
+            <i class="fas fa-redo me-2"></i>Optimasi Baru
+        </a>
+        <button class="btn btn-success me-2" onclick="exportResults()">
+            <i class="fas fa-download me-2"></i>Export Hasil
+        </button>
+        <button class="btn btn-warning me-2" onclick="printResults()">
+            <i class="fas fa-print me-2"></i>Cetak Laporan
+        </button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+            <i class="fas fa-home me-2"></i>Kembali ke Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stats-card text-center">
+            <i class="fas fa-money-bill-wave fa-3x mb-3"></i>
+            <h3>{{ "Rp {:,.0f}".format(results.total_profit or 0) }}</h3>
+            <p class="mb-0">Total Profit</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+            <i class="fas fa-gas-pump fa-3x mb-3"></i>
+            <h3>{{ "Rp {:,.0f}".format(results.total_cost or 0) }}</h3>
+            <p class="mb-0">Total Biaya</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+            <i class="fas fa-chart-line fa-3x mb-3"></i>
+            <h3>{{ "Rp {:,.0f}".format(results.net_profit or 0) }}</h3>
+            <p class="mb-0">Profit Bersih</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #a8edea, #fed6e3);">
+            <i class="fas fa-star fa-2x mb-2"></i>
+            <h4>{{ "%.2f"|format(results.fitness or 0) }}</h4>
+            <p class="mb-0">Skor Fitness</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);">
+            <i class="fas fa-boxes fa-2x mb-2"></i>
+            <h4>{{ results.loaded_items or 0 }}/{{ results.total_items or 0 }}</h4>
+            <p class="mb-0">Barang Dimuat</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);">
+            <i class="fas fa-percentage fa-2x mb-2"></i>
+           <h4>{{ "%.1f"|format(((results.loaded_items or 0) / (results.total_items or 1) * 100)) }}%</h4>
+            <p class="mb-0">Efisiensi Muat</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card text-center" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb);">
+            <i class="fas fa-truck fa-2x mb-2"></i>
+            <h4>{{ results.truck_details|length if results.truck_details else 0 }}</h4>
+            <p class="mb-0">Truk Digunakan</p>
+        </div>
+    </div>
+</div>
+
+<!-- Truck Assignments -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-truck me-2"></i>Penugasan Truk & Rute
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if results.truck_details and results.truck_details|length > 0 %}
+                    {% for truck in results.truck_details %}
+                    <div class="card mb-3 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="mb-0"><i class="fas fa-truck me-2"></i>Truk {{ truck.truk_id }}</h6>
+                                    <small>Asal: {{ truck.kota_asal }}</small>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <div class="fw-bold">{{ truck.items_count }} Barang</div>
+                                    <div>Profit: {{ "Rp {:,.0f}".format(truck.profit) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-weight-hanging me-2"></i>Kapasitas Berat</h6>
+                                    {% set weight_percent = (truck.total_weight / truck.capacity_weight * 100)|round(1) %}
+                                    <div class="progress mb-2" style="height: 25px;">
+                                        <div class="progress-bar {% if weight_percent > 100 %}bg-danger{% else %}bg-success{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ [weight_percent, 100]|min }}%">
+                                            {{ weight_percent }}%
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ "%.1f"|format(truck.total_weight) }} / {{ truck.capacity_weight }} kg</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-cube me-2"></i>Kapasitas Volume</h6>
+                                    {% set volume_percent = (truck.total_volume / truck.capacity_volume * 100)|round(1) %}
+                                    <div class="progress mb-2" style="height: 25px;">
+                                        <div class="progress-bar {% if volume_percent > 100 %}bg-danger{% else %}bg-info{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ [volume_percent, 100]|min }}%">
+                                            {{ volume_percent }}%
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ "%.2f"|format(truck.total_volume) }} / {{ truck.capacity_volume }} m³</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <h6><i class="fas fa-route me-2"></i>Rute Pengiriman</h6>
+                                <div>
+                                    {% if truck.route and truck.route|length > 0 %}
+                                        {% for city in truck.route %}
+                                            {# Periksa apakah ini adalah kota pertama (keberangkatan) atau terakhir (kepulangan) #}
+                                            {% if loop.first or loop.last %}
+                                                {# Gunakan warna hijau (bg-success) untuk kota asal #}
+                                                <span class="badge bg-success me-1 mb-1">{{ city }}</span>
+                                            {% else %}
+                                                {# Gunakan warna abu-abu (bg-secondary) untuk kota tujuan #}
+                                                <span class="badge bg-secondary me-1 mb-1">{{ city }}</span>
+                                            {% endif %}
+
+                                            {% if not loop.last %}
+                                                <i class="fas fa-arrow-right text-muted me-1"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">Tidak ada rute</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <h6><i class="fas fa-boxes me-2"></i>Barang yang Dimuat</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>ID Barang</th>
+                                                <th>Berat</th>
+                                                <th>Volume</th>
+                                                <th>Tujuan</th>
+                                                <th>Profit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in truck['items'] %}
+                                            <tr>
+                                                <td><span class="badge bg-primary">{{ item.id }}</span></td>
+                                                <td>{{ item.berat }} kg</td>
+                                                <td>{{ item.dimensi }} m³</td>
+                                                <td>{{ item.kota_tujuan }}</td>
+                                                <td>{{ "Rp {:,.0f}".format(item.profit) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Tidak ada truk yang ditugaskan dengan barang.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unloaded Items -->
+{% if results.unloaded_items and results.unloaded_items|length > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Barang Tidak Dimuat
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-box-open me-2"></i>Barang yang Tidak Dimuat</h6>
+                        <p class="text-muted">Barang yang tidak dapat ditugaskan ke truk karena keterbatasan kapasitas.</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="display-6 text-danger">{{ results.unloaded_items|length }}</div>
+                        <div class="text-muted">BARANG TIDAK DIMUAT</div>
+                        <div class="mt-2">
+                            <strong>Profit Hilang: </strong>
+                            <span class="text-danger">{{ "Rp {:,.0f}".format(results.unloaded_profit_loss or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID Barang</th>
+                                <th>Berat (kg)</th>
+                                <th>Volume (m³)</th>
+                                <th>Tujuan</th>
+                                <th>Profit Hilang</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in results.unloaded_items %}
+                            <tr>
+                                <td><span class="badge bg-warning text-dark">{{ item.id }}</span></td>
+                                <td>{{ item.berat }}</td>
+                                <td>{{ item.dimensi }}</td>
+                                <td>{{ item.kota_tujuan }}</td>
+                                <td class="text-danger">{{ "Rp {:,.0f}".format(item.profit) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Analytics Charts -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Analisis Performa
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6><i class="fas fa-chart-pie me-2"></i>Utilisasi Kapasitas</h6>
+                                <canvas id="capacityChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6><i class="fas fa-chart-doughnut me-2"></i>Distribusi Profit</h6>
+                                <canvas id="profitChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Results data from Flask
+    const resultsData = {{ results|tojson }};
+    let capacityChart = null;
+    let profitChart = null;
+
+    $(document).ready(function() {
+        initializeCharts();
+    });
+
+    function initializeCharts() {
+        createCapacityChart();
+        createProfitChart();
+    }
+
+    function createCapacityChart() {
+        const ctx = document.getElementById('capacityChart').getContext('2d');
+        
+        if (capacityChart) {
+            capacityChart.destroy();
+        }
+
+        const truckData = resultsData.truck_details || [];
+        const labels = truckData.map(truck => `Truk ${truck.truk_id}`);
+        const weightData = truckData.map(truck => (truck.total_weight / truck.capacity_weight * 100).toFixed(1));
+        const volumeData = truckData.map(truck => (truck.total_volume / truck.capacity_volume * 100).toFixed(1));
+
+        capacityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Utilisasi Berat (%)',
+                        data: weightData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Utilisasi Volume (%)',
+                        data: volumeData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 120,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+    }
+
+    function createProfitChart() {
+        const ctx = document.getElementById('profitChart').getContext('2d');
+        
+        if (profitChart) {
+            profitChart.destroy();
+        }
+
+        const truckData = resultsData.truck_details || [];
+        const labels = truckData.map(truck => `Truk ${truck.truk_id}`);
+        const profitData = truckData.map(truck => truck.profit);
+
+        profitChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: profitData,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)',
+                        'rgba(255, 159, 64, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 205, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': Rp ' + context.parsed.toLocaleString('id-ID');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function exportResults() {
+        showLoading('loadingSpinner');
+        
+        $.get('/api/export_results')
+            .done(function(data) {
+                if (data.status === 'success') {
+                    const blob = new Blob([JSON.stringify(data.data, null, 2)], {
+                        type: 'application/json'
+                    });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = data.filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showAlert('Hasil berhasil diekspor!', 'success');
+                } else {
+                    showAlert('Ekspor gagal: ' + data.message, 'danger');
+                }
+            })
+            .fail(function() {
+                showAlert('Terjadi kesalahan saat mengekspor hasil', 'danger');
+            })
+            .always(function() {
+                hideLoading('loadingSpinner');
+            });
+    }
+
+    function printResults() {
+        window.print();
+    }
+</script>
+
+<div id="loadingSpinner" class="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Memproses ekspor...</p>
+</div>
+{% endblock %}

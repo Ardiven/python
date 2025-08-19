@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Halaman Tidak Ditemukan - Sistem Optimasi Logistik{% endblock %}
+
+{% block content %}
+<div class="container-fluid d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="row w-100 justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body text-center p-5">
+                    <!-- Animated 404 Number -->
+                    <div class="error-number mb-4">
+                        <h1 class="display-1 fw-bold text-primary animated-404">404</h1>
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3 pulse-animation"></i>
+                        </div>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div class="error-message mb-4">
+                        <h2 class="h3 fw-bold text-dark mb-3">Oops! Halaman Tidak Ditemukan</h2>
+                        <p class="text-muted lead mb-4">
+                            Maaf, halaman yang Anda cari tidak dapat ditemukan. 
+                            Mungkin halaman telah dipindahkan, dihapus, atau URL yang Anda masukkan salah.
+                        </p>
+                    </div>
+
+                    <!-- Suggested Actions -->
+                    <div class="suggested-actions mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="action-card p-3 border rounded-3 h-100 hover-effect">
+                                    <i class="fas fa-home text-primary fa-2x mb-2"></i>
+                                    <h6 class="fw-bold">Kembali ke Beranda</h6>
+                                    <p class="small text-muted mb-0">Mulai dari halaman utama</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="action-card p-3 border rounded-3 h-100 hover-effect">
+                                    <i class="fas fa-search text-success fa-2x mb-2"></i>
+                                    <h6 class="fw-bold">Cari Halaman</h6>
+                                    <p class="small text-muted mb-0">Gunakan navigasi menu</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="action-card p-3 border rounded-3 h-100 hover-effect">
+                                    <i class="fas fa-arrow-left text-info fa-2x mb-2"></i>
+                                    <h6 class="fw-bold">Halaman Sebelumnya</h6>
+                                    <p class="small text-muted mb-0">Kembali ke halaman terakhir</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="navigation-buttons">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg me-2 mb-2">
+                            <i class="fas fa-home"></i> Kembali ke Dashboard
+                        </a>
+                        <button class="btn btn-secondary btn-lg mb-2" onclick="history.back()">
+                            <i class="fas fa-arrow-left"></i> Halaman Sebelumnya
+                        </button>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div class="quick-links mt-4 pt-4 border-top">
+                        <h6 class="text-muted mb-3">Tautan Cepat:</h6>
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                            <a href="{{ url_for('input_data') }}" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-plus"></i> Input Data
+                            </a>
+                            <a href="{{ url_for('optimization') }}" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-cogs"></i> Optimasi
+                            </a>
+                            <a href="{{ url_for('results') }}" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-chart-bar"></i> Hasil
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Error Code for Developers -->
+                    <div class="error-details mt-4 pt-3 border-top">
+                        <details class="text-start">
+                            <summary class="text-muted small fw-bold cursor-pointer">Detail Error (untuk developer)</summary>
+                            <div class="mt-2 p-3 bg-light rounded">
+                                <small class="text-muted d-block">
+                                    <strong>Error Code:</strong> 404 - Not Found<br>
+                                    <strong>Requested URL:</strong> {{ request.url }}<br>
+                                    <strong>Timestamp:</strong> {{ moment().format('YYYY-MM-DD HH:mm:ss') }}<br>
+                                    <strong>User Agent:</strong> {{ request.headers.get('User-Agent', 'Unknown') }}
+                                </small>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Support Info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="text-center">
+            <div class="card border-0 bg-light">
+                <div class="card-body py-3">
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-question-circle"></i>
+                        Butuh bantuan? Hubungi administrator sistem atau 
+                        <a href="mailto:support@example.com" class="text-decoration-none">kirim email</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .animated-404 {
+        background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+        background-size: 300% 300%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 3s ease-in-out infinite;
+    }
+
+    @keyframes gradientShift {
+        0%, 100% { 
+            background-position: 0% 50%; 
+        }
+        50% { 
+            background-position: 100% 50%; 
+        }
+    }
+
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .action-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .hover-effect:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-color: #667eea !important;
+    }
+
+    .error-number {
+        position: relative;
+    }
+
+    .error-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+    }
+
+    .quick-links .btn {
+        transition: all 0.3s ease;
+    }
+
+    .quick-links .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .cursor-pointer:hover {
+        color: #667eea !important;
+    }
+
+    /* Floating background elements */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(240, 147, 251, 0.05) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .display-1 {
+            font-size: 4rem;
+        }
+        
+        .action-card {
+            margin-bottom: 1rem;
+        }
+        
+        .navigation-buttons .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Add click handlers for action cards
+        $('.action-card').click(function() {
+            $(this).addClass('border-primary');
+            setTimeout(() => {
+                $(this).removeClass('border-primary');
+            }, 200);
+        });
+
+        // Animate elements on load
+        $('.card').hide().fadeIn(800);
+        
+        // Add some interactive feedback
+        $('.btn').on('mouseenter', function() {
+            $(this).addClass('shadow-sm');
+        }).on('mouseleave', function() {
+            $(this).removeClass('shadow-sm');
+        });
+
+        // Track 404 error for analytics (optional)
+        console.log('404 Error tracked:', {
+            url: window.location.href,
+            referrer: document.referrer,
+            timestamp: new Date().toISOString()
+        });
+    });
+
+    // Add floating animation to error icon
+    function floatAnimation() {
+        $('.error-icon i').animate({
+            transform: 'translateY(-10px)'
+        }, 2000).animate({
+            transform: 'translateY(0px)'
+        }, 2000, floatAnimation);
+    }
+    
+    // Start floating animation
+    setTimeout(floatAnimation, 1000);
+</script>
+{% endblock %}
